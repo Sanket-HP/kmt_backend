@@ -1,0 +1,349 @@
+{
+  "stops": [
+    {
+      "stopId": "stop_cbs",
+      "name": "Central Bus Stand (CBS)",
+      "latitude": 16.7026,
+      "longitude": 74.24
+    },
+    {
+      "stopId": "stop_mahalaxmi",
+      "name": "Mahalaxmi Temple",
+      "latitude": 16.6944,
+      "longitude": 74.2239
+    },
+    {
+      "stopId": "stop_rankala",
+      "name": "Rankala Lake Terminal",
+      "latitude": 16.6917,
+      "longitude": 74.2158
+    },
+    {
+      "stopId": "stop_university",
+      "name": "Shivaji University campus",
+      "latitude": 16.678,
+      "longitude": 74.2546
+    },
+    {
+      "stopId": "stop_rajarampuri",
+      "name": "Rajarampuri Corner",
+      "latitude": 16.6932,
+      "longitude": 74.2486
+    },
+    {
+      "stopId": "stop_tarabai",
+      "name": "Tarabai Park Chauk",
+      "latitude": 16.7115,
+      "longitude": 74.245
+    },
+    {
+      "stopId": "stop_panhala",
+      "name": "Panhala Fort Hill Terminal",
+      "latitude": 16.8112,
+      "longitude": 74.1084
+    },
+    {
+      "stopId": "stop_bawada",
+      "name": "Kasaba Bawada Pavilion",
+      "latitude": 16.7258,
+      "longitude": 74.2464
+    },
+    {
+      "stopId": "stop_gandhinagar",
+      "name": "Gandhinagar Bazar",
+      "latitude": 16.6985,
+      "longitude": 74.282
+    },
+    {
+      "stopId": "stop_kalamba",
+      "name": "Kalamba Lake Reservoir",
+      "latitude": 16.6575,
+      "longitude": 74.2384
+    },
+    {
+      "stopId": "stop_shiroli",
+      "name": "Shiroli MIDC Sector-A",
+      "latitude": 16.745,
+      "longitude": 74.279
+    }
+  ],
+  "routes": [
+    {
+      "routeId": "route_10a",
+      "routeNumber": "10A",
+      "source": "Central Bus Stand (CBS)",
+      "destination": "Rankala Lake Terminal",
+      "fare": 15,
+      "stops": [
+        "stop_cbs",
+        "stop_tarabai",
+        "stop_rajarampuri",
+        "stop_mahalaxmi",
+        "stop_rankala"
+      ],
+      "timetable": [
+        "07:00",
+        "08:00",
+        "09:00",
+        "10:00",
+        "11:00",
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00",
+        "19:00",
+        "20:00",
+        "21:00"
+      ]
+    },
+    {
+      "routeId": "route_5",
+      "routeNumber": "5",
+      "source": "Central Bus Stand (CBS)",
+      "destination": "Shivaji University campus",
+      "fare": 20,
+      "stops": [
+        "stop_cbs",
+        "stop_tarabai",
+        "stop_rajarampuri",
+        "stop_university"
+      ],
+      "timetable": [
+        "07:30",
+        "08:30",
+        "09:30",
+        "10:30",
+        "11:30",
+        "12:30",
+        "13:30",
+        "14:30",
+        "15:30",
+        "16:30",
+        "17:30",
+        "18:30",
+        "19:30",
+        "20:30",
+        "21:30"
+      ]
+    },
+    {
+      "routeId": "route_20",
+      "routeNumber": "20",
+      "source": "Central Bus Stand (CBS)",
+      "destination": "Panhala Fort Hill Terminal",
+      "fare": 45,
+      "stops": [
+        "stop_cbs",
+        "stop_tarabai",
+        "stop_panhala"
+      ],
+      "timetable": [
+        "08:00",
+        "10:00",
+        "12:00",
+        "14:00",
+        "16:00",
+        "18:00",
+        "20:00"
+      ]
+    },
+    {
+      "routeId": "route_8",
+      "routeNumber": "8",
+      "source": "Central Bus Stand (CBS)",
+      "destination": "Kasaba Bawada Pavilion",
+      "fare": 15,
+      "stops": [
+        "stop_cbs",
+        "stop_tarabai",
+        "stop_bawada"
+      ],
+      "timetable": [
+        "07:15",
+        "09:15",
+        "11:15",
+        "13:15",
+        "15:15",
+        "17:15",
+        "19:15",
+        "21:15"
+      ]
+    },
+    {
+      "routeId": "route_15",
+      "routeNumber": "15",
+      "source": "Central Bus Stand (CBS)",
+      "destination": "Kalamba Lake Reservoir",
+      "fare": 20,
+      "stops": [
+        "stop_cbs",
+        "stop_rajarampuri",
+        "stop_mahalaxmi",
+        "stop_kalamba"
+      ],
+      "timetable": [
+        "07:45",
+        "09:45",
+        "11:45",
+        "13:45",
+        "15:45",
+        "17:45",
+        "19:45",
+        "21:45"
+      ]
+    },
+    {
+      "routeId": "route_12",
+      "routeNumber": "12",
+      "source": "Central Bus Stand (CBS)",
+      "destination": "Shiroli MIDC Sector-A",
+      "fare": 25,
+      "stops": [
+        "stop_cbs",
+        "stop_tarabai",
+        "stop_shiroli"
+      ],
+      "timetable": [
+        "06:30",
+        "08:30",
+        "10:30",
+        "12:30",
+        "14:30",
+        "16:30",
+        "18:30",
+        "20:30"
+      ]
+    },
+    {
+      "routeId": "route_18",
+      "routeNumber": "18",
+      "source": "Central Bus Stand (CBS)",
+      "destination": "Gandhinagar Bazar",
+      "fare": 20,
+      "stops": [
+        "stop_cbs",
+        "stop_rajarampuri",
+        "stop_gandhinagar"
+      ],
+      "timetable": [
+        "07:00",
+        "09:00",
+        "11:00",
+        "13:00",
+        "15:00",
+        "17:00",
+        "19:00",
+        "21:00"
+      ]
+    }
+  ],
+  "buses": [
+    {
+      "busId": "bus_101",
+      "busNumber": "MH-09-CV-1244",
+      "status": "active",
+      "currentTripId": null
+    },
+    {
+      "busId": "bus_102",
+      "busNumber": "MH-09-CV-1822",
+      "status": "active",
+      "currentTripId": null
+    },
+    {
+      "busId": "bus_103",
+      "busNumber": "MH-09-CV-2234",
+      "status": "active",
+      "currentTripId": null
+    },
+    {
+      "busId": "bus_104",
+      "busNumber": "MH-09-CV-3118",
+      "status": "maintenance",
+      "currentTripId": null
+    },
+    {
+      "busId": "bus_105",
+      "busNumber": "MH-09-CV-4491",
+      "status": "inactive",
+      "currentTripId": null
+    },
+    {
+      "busId": "bus_106",
+      "busNumber": "MH-09-CV-5521",
+      "status": "active",
+      "currentTripId": null
+    },
+    {
+      "busId": "bus_107",
+      "busNumber": "MH-09-CV-6632",
+      "status": "active",
+      "currentTripId": null
+    },
+    {
+      "busId": "bus_108",
+      "busNumber": "MH-09-CV-7711",
+      "status": "active",
+      "currentTripId": null
+    },
+    {
+      "busId": "bus_109",
+      "busNumber": "MH-09-CV-8822",
+      "status": "active",
+      "currentTripId": null
+    },
+    {
+      "busId": "bus_110",
+      "busNumber": "MH-09-CV-9933",
+      "status": "active",
+      "currentTripId": null
+    }
+  ],
+  "fares": {
+    "baseFare": 10,
+    "perStopFare": 2,
+    "studentDiscount": 0.5,
+    "seniorDiscount": 0.4,
+    "flatRoutes": {
+      "route_20": 45
+    },
+    "passPrices": {
+      "student": 250,
+      "monthly": 500,
+      "senior": 150
+    }
+  },
+  "presetUsers": [
+    {
+      "uid": "uid_passenger_1",
+      "name": "Rahul Patil",
+      "email": "rahul@gmail.com",
+      "phone": "9876543210",
+      "role": "passenger"
+    },
+    {
+      "uid": "uid_driver_1",
+      "name": "Sanjay Shinde",
+      "email": "sanjay@kmt.gov.in",
+      "phone": "9876543211",
+      "role": "driver"
+    },
+    {
+      "uid": "uid_conductor_1",
+      "name": "Anil Kamble",
+      "email": "anil@kmt.gov.in",
+      "phone": "9876543212",
+      "role": "conductor"
+    },
+    {
+      "uid": "uid_admin_1",
+      "name": "KMT Admin",
+      "email": "admin@kmt.gov.in",
+      "phone": "9876543213",
+      "role": "admin"
+    }
+  ]
+}

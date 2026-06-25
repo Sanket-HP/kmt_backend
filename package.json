@@ -1,0 +1,37 @@
+{
+  "name": "kmt-backend",
+  "version": "1.0.0",
+  "description": "KMT Connect Enterprise Backend API Platform",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "jest --runInBand --detectOpenHandles",
+    "load-test": "jest src/services/load_simulator.ts --testMatch=\"**/load_simulator.ts\" --runInBand --detectOpenHandles",
+    "migrate": "ts-node src/services/migration.ts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.12.7",
+    "@types/supertest": "^6.0.2",
+    "@types/ws": "^8.5.10",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4",
+    "ts-jest": "^29.1.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.5"
+  }
+}
