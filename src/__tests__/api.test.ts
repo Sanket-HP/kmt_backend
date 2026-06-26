@@ -1,3 +1,6 @@
+import * as dotenv from 'dotenv';
+dotenv.config({ path: '.env.testing' });
+
 const mockGet = jest.fn();
 const mockSet = jest.fn().mockResolvedValue({});
 const mockUpdate = jest.fn().mockResolvedValue({});
@@ -160,25 +163,36 @@ describe('KMT Backend REST API Integration Tests', () => {
     });
 
     it('should verify payment and update ticket details upon valid signature', async () => {
+      // 1. User role check
       mockGet.mockResolvedValueOnce({
         exists: true,
         data: () => ({ role: 'passenger' })
       });
-      // Ticket status lookup mock
+      // 2. Transaction replay check (mock as not existing)
+      mockGet.mockResolvedValueOnce({
+        exists: false
+      });
+      // 3. Ticket status lookup mock
       mockGet.mockResolvedValueOnce({
         exists: true,
         data: () => ({ status: 'pending', paymentStatus: 'pending' })
       });
 
-      // Signature must be 64 characters hex (e.g. razorpay signature format)
-      const validSig = 'a'.repeat(64);
+      const orderId = 'order_123';
+      const paymentId = 'pay_123';
+      const secret = process.env.RAZORPAY_KEY_SECRET || 'testing_razorpay_secret_key_here';
+      const crypto = require('crypto');
+      const validSig = crypto
+        .createHmac('sha256', secret)
+        .update(orderId + '|' + paymentId)
+        .digest('hex');
 
       const res = await request(app)
         .post('/payments/verify')
         .set('Authorization', 'Bearer mock-token')
         .send({
-          orderId: 'order_123',
-          paymentId: 'pay_123',
+          orderId,
+          paymentId,
           signature: validSig,
           amount: 500,
           paymentMethod: 'upi',

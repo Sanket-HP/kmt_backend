@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import { AuthenticatedRequest, authenticateToken, requireRole } from '../middleware/auth';
 import { db } from '../services/db';
+import crypto from 'crypto';
 
 const router = Router();
 
@@ -9,6 +10,20 @@ const router = Router();
  */
 router.post('/webhook', async (req, res) => {
   console.log('[Razorpay Webhook] Received payload notification:', req.body);
+  const signature = req.headers['x-razorpay-signature'] as string;
+  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+  if (webhookSecret && signature) {
+    const shasum = crypto.createHmac('sha256', webhookSecret);
+    shasum.update(JSON.stringify(req.body));
+    const digest = shasum.digest('hex');
+
+    if (digest !== signature) {
+      console.warn('[Razorpay Webhook] Webhook signature verification failed.');
+      return res.status(400).json({ error: 'Invalid webhook signature.' });
+    }
+  }
+
   const event = req.body.event;
   if (event === 'payment.captured') {
     const payment = req.body.payload.payment.entity;
@@ -28,14 +43,29 @@ router.post('/verify', authenticateToken, async (req: AuthenticatedRequest, res:
   }
 
   try {
-    // 1. Signature validation checking
-    const isValid = signature && signature.length === 64;
-    if (!isValid) {
+    // 1. Duplicate transaction prevention (Replay protection)
+    const transactionRef = db.collection('transactions').doc(paymentId);
+    const transactionSnap = await transactionRef.get();
+    if (transactionSnap.exists) {
+      return res.status(400).json({ error: 'Duplicate payment transaction detected.' });
+    }
+
+    // 2. Real cryptographic signature validation
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!secret) {
+      return res.status(500).json({ error: 'Razorpay key secret is not configured on the server.' });
+    }
+
+    const generatedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(orderId + "|" + paymentId)
+      .digest('hex');
+
+    if (generatedSignature !== signature) {
       return res.status(400).json({ error: 'Payment signature validation failed.' });
     }
 
     // 2. Write Transaction
-    const transactionRef = db.collection('transactions').doc(paymentId);
     const txData = {
       transactionId: paymentId,
       orderId,
