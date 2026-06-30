@@ -1,10 +1,29 @@
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import * as fs from 'fs';
+
+const envFile = `.env.${process.env.NODE_ENV || 'development'}`;
+const envPath = path.resolve(process.cwd(), envFile);
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+  console.log(`[KMT Control] Loaded environment config: ${envFile}`);
+} else {
+  const rootEnvPath = path.resolve(process.cwd(), '.env');
+  if (fs.existsSync(rootEnvPath)) {
+    dotenv.config({ path: rootEnvPath });
+    console.log("[KMT Control] Loaded root level default environment config.");
+  } else {
+    dotenv.config();
+    console.log("[KMT Control] Loaded default environment configuration.");
+  }
+}
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import * as http from 'http';
 import { WebSocketServer } from 'ws';
-import * as dotenv from 'dotenv';
 import * as admin from 'firebase-admin';
 import { setupWebSocketServer } from './sockets/tracker';
 import paymentsRouter from './routes/payments';
@@ -15,8 +34,6 @@ import authRouter from './routes/auth';
 import adminRouter from './routes/admin';
 import ticketsRouter from './routes/tickets';
 import { bootstrapAdmin } from './services/bootstrap';
-
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;

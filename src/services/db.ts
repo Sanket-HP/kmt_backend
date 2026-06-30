@@ -1,7 +1,23 @@
 import * as admin from 'firebase-admin';
 import * as dotenv from 'dotenv';
+import * as path from 'path';
+import * as fs from 'fs';
 
-dotenv.config();
+const envFile = `.env.${process.env.NODE_ENV || 'development'}`;
+const envPath = path.resolve(process.cwd(), envFile);
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+  console.log(`[Env Loader] Loaded environment config: ${envFile}`);
+} else {
+  const rootEnvPath = path.resolve(process.cwd(), '.env');
+  if (fs.existsSync(rootEnvPath)) {
+    dotenv.config({ path: rootEnvPath });
+    console.log("[Env Loader] Loaded default root environment config.");
+  } else {
+    dotenv.config();
+    console.log("[Env Loader] Loaded default fallback config.");
+  }
+}
 
 const projectId = process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || 'kmt-connect';
 
