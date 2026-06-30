@@ -11,6 +11,9 @@ import paymentsRouter from './routes/payments';
 import fleetRouter from './routes/fleet';
 import analyticsRouter from './routes/analytics';
 import supportRouter from './routes/support';
+import authRouter from './routes/auth';
+import adminRouter from './routes/admin';
+import ticketsRouter from './routes/tickets';
 
 dotenv.config();
 
@@ -118,12 +121,20 @@ app.use('/payments', paymentsRouter);
 app.use('/fleet', fleetRouter);
 app.use('/analytics', analyticsRouter);
 app.use('/support', supportRouter);
+app.use('/auth', authRouter);
+app.use('/admin', adminRouter);
+app.use('/tickets', ticketsRouter);
+app.use('/passes', ticketsRouter);
 
 // API namespaced routes (for standard clean architecture conformance)
 app.use('/api/payments', paymentsRouter);
 app.use('/api/fleet', fleetRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/support', supportRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/tickets', ticketsRouter);
+app.use('/api/passes', ticketsRouter);
 
 // 8. Wildcard 404 Handler
 app.use((req, res, next) => {

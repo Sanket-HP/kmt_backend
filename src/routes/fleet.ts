@@ -90,16 +90,66 @@ router.post('/bus/status', authenticateToken, requireRole(['admin']), async (req
 });
 
 /**
+ * GET /api/fleet/my-duty
+ * Fetch today's assigned duty for the logged-in driver or conductor.
+ */
+router.get('/my-duty', authenticateToken, requireRole(['driver', 'conductor']), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const uid = req.user?.uid;
+    const role = req.user?.role;
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    const fieldName = role === 'driver' ? 'driverId' : 'conductorId';
+    const dutiesSnap = await db.collection('duties')
+      .where(fieldName, '==', uid)
+      .where('date', '==', dateStr)
+      .limit(1)
+      .get();
+
+    if (dutiesSnap.empty) {
+      // Fallback: search for any assigned/active duty
+      const fallbackSnap = await db.collection('duties')
+        .where(fieldName, '==', uid)
+        .where('status', 'in', ['assigned', 'active'])
+        .limit(1)
+        .get();
+
+      if (fallbackSnap.empty) {
+        return res.status(200).json({ success: false, message: 'No duty assigned.' });
+      }
+      return res.status(200).json({ success: true, duty: fallbackSnap.docs[0].data() });
+    }
+
+    return res.status(200).json({ success: true, duty: dutiesSnap.docs[0].data() });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to retrieve duty.' });
+  }
+});
+
+/**
  * Creates/starts an active Trip in Firestore (For Drivers).
+ * Now requires dutyId and verifies assignment.
  */
 router.post('/trip/start', authenticateToken, requireRole(['driver', 'admin']), async (req: AuthenticatedRequest, res: Response) => {
-  const { busId, routeId } = req.body;
+  const { dutyId } = req.body;
 
-  if (!busId || !routeId) {
-    return res.status(400).json({ error: 'Missing busId or routeId.' });
+  if (!dutyId) {
+    return res.status(400).json({ error: 'Missing dutyId.' });
   }
 
   try {
+    const dutyRef = db.collection('duties').doc(dutyId);
+    const dutySnap = await dutyRef.get();
+    if (!dutySnap.exists) {
+      return res.status(404).json({ error: 'Assigned duty roster not found.' });
+    }
+
+    const dutyData = dutySnap.data()!;
+    if (req.user?.role === 'driver' && dutyData.driverId !== req.user.uid) {
+      return res.status(403).json({ error: 'This duty is not assigned to you.' });
+    }
+
+    const { busId, routeId } = dutyData;
     const tripId = 'trip_' + Math.random().toString(36).substr(2, 9);
     
     // Fetch route first stop coordinates if possible, else default to CBS
@@ -135,6 +185,7 @@ router.post('/trip/start', authenticateToken, requireRole(['driver', 'admin']), 
 
     await db.collection('trips').doc(tripId).set(newTrip);
     await db.collection('buses').doc(busId).update({ currentTripId: tripId });
+    await dutyRef.update({ status: 'active', tripId });
 
     return res.status(200).json({ success: true, tripId, trip: newTrip });
   } catch (error: any) {
@@ -190,6 +241,11 @@ router.post('/trip/end', authenticateToken, requireRole(['driver', 'admin']), as
 
     if (tripData?.busId) {
       await db.collection('buses').doc(tripData.busId).update({ currentTripId: null });
+    }
+
+    const dutiesQuery = await db.collection('duties').where('tripId', '==', tripId).limit(1).get();
+    if (!dutiesQuery.empty) {
+      await dutiesQuery.docs[0].ref.update({ status: 'completed' });
     }
 
     return res.status(200).json({ success: true });

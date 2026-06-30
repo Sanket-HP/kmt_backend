@@ -129,4 +129,95 @@ router.get('/lostfound', authenticateToken, async (req: AuthenticatedRequest, re
   }
 });
 
+/**
+ * POST /api/support/feedback
+ * Registers user feedback for drivers/buses.
+ */
+router.post('/feedback', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  const { ratingDriver, ratingBus, issue, feedbackText } = req.body;
+
+  if (ratingDriver === undefined || ratingBus === undefined || !issue || !feedbackText) {
+    return res.status(400).json({ error: 'Missing ratingDriver, ratingBus, issue, or feedbackText.' });
+  }
+
+  const feedbackId = 'fb_' + Math.random().toString(36).substr(2, 9);
+  const feedback = {
+    feedbackId,
+    userId: req.user?.uid || 'guest',
+    ratingDriver: parseInt(ratingDriver),
+    ratingBus: parseInt(ratingBus),
+    issue,
+    feedbackText,
+    timestamp: Date.now()
+  };
+
+  try {
+    await db.collection('feedback').doc(feedbackId).set(feedback);
+    return res.status(201).json({ success: true, feedback });
+  } catch (error: any) {
+    console.error('[Support Router] Feedback failed:', error);
+    return res.status(500).json({ error: error.message || 'Failed to submit feedback.' });
+  }
+});
+
+/**
+ * POST /api/support/sos
+ * Renders active passenger/driver SOS request.
+ */
+router.post('/sos', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  const { latitude, longitude } = req.body;
+
+  if (latitude === undefined || longitude === undefined) {
+    return res.status(400).json({ error: 'Latitude and Longitude are required for SOS.' });
+  }
+
+  const sosId = 'sos_' + Math.random().toString(36).substr(2, 9);
+  const sos = {
+    sosId,
+    userId: req.user?.uid || 'guest',
+    latitude: parseFloat(latitude),
+    longitude: parseFloat(longitude),
+    timestamp: Date.now(),
+    status: 'pending'
+  };
+
+  try {
+    await db.collection('emergencyRequests').doc(sosId).set(sos);
+
+    // Auto-schedule system notification for emergencies
+    const systemNotifId = 'notif_' + Math.random().toString(36).substr(2, 9);
+    await db.collection('notifications').doc(systemNotifId).set({
+      id: systemNotifId,
+      title: 'EMERGENCY SOS ALERT',
+      message: `Emergency location triggered by KMT User at coordinates: ${latitude}, ${longitude}`,
+      type: 'emergency',
+      timestamp: Date.now()
+    });
+
+    return res.status(201).json({ success: true, sos });
+  } catch (error: any) {
+    console.error('[Support Router] SOS trigger failed:', error);
+    return res.status(500).json({ error: error.message || 'Failed to trigger SOS.' });
+  }
+});
+
+/**
+ * POST /api/support/sos/resolve
+ * Resolves active emergency SOS.
+ */
+router.post('/sos/resolve', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  const { sosId } = req.body;
+
+  if (!sosId) {
+    return res.status(400).json({ error: 'sosId is required.' });
+  }
+
+  try {
+    await db.collection('emergencyRequests').doc(sosId).update({ status: 'resolved' });
+    return res.status(200).json({ success: true, message: 'SOS alert resolved.' });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to resolve SOS.' });
+  }
+});
+
 export default router;
