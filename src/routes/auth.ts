@@ -75,4 +75,90 @@ router.post('/employee-login', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/auth/verify-admin
+ * Verifies a Firebase ID token, checks if user has "admin" role in Firestore.
+ */
+router.post('/verify-admin', async (req: Request, res: Response) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token is missing.' });
+  }
+
+  try {
+    const decodedToken = await auth.verifyIdToken(token);
+    const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+
+    if (!userDoc.exists) {
+      return res.status(403).json({ error: 'Unauthorized Access. User profile not found.' });
+    }
+
+    const userData = userDoc.data();
+    if (userData?.role !== 'admin') {
+      return res.status(403).json({ error: 'Unauthorized Access. Administrative privileges required.' });
+    }
+
+    if (!userData.isActive) {
+      return res.status(403).json({ error: 'Unauthorized Access. This account is deactivated.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: {
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+        name: userData.name,
+        role: userData.role,
+        employeeId: userData.employeeId,
+        requirePasswordChange: !!userData.requirePasswordChange
+      }
+    });
+  } catch (err: any) {
+    console.error('[Verify Admin Endpoint Error]:', err);
+    return res.status(401).json({ error: 'Invalid token or session expired.' });
+  }
+});
+
+/**
+ * POST /api/auth/change-admin-password
+ * Authenticates the admin and updates their password, disabling further bootstrapping.
+ */
+router.post('/change-admin-password', async (req: Request, res: Response) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  const { newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ error: 'Token and new password are required.' });
+  }
+
+  try {
+    const decodedToken = await auth.verifyIdToken(token);
+    const uid = decodedToken.uid;
+
+    const userDoc = await db.collection('users').doc(uid).get();
+    if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
+      return res.status(403).json({ error: 'Access Denied.' });
+    }
+
+    // Update Firebase Auth password
+    await auth.updateUser(uid, { password: newPassword });
+
+    // Update Firestore admin document to set requirePasswordChange = false
+    await db.collection('users').doc(uid).update({
+      requirePasswordChange: false,
+      updatedAt: Date.now()
+    });
+
+    console.log(`[Bootstrap] Admin password successfully changed. Initialization disabled for uid: ${uid}`);
+
+    return res.status(200).json({ success: true, message: 'Password updated successfully.' });
+  } catch (err: any) {
+    console.error('[Change Admin Password Endpoint Error]:', err);
+    return res.status(500).json({ error: err.message || 'Internal server error changing password.' });
+  }
+});
+
 export default router;

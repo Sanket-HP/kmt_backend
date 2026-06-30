@@ -14,6 +14,7 @@ import supportRouter from './routes/support';
 import authRouter from './routes/auth';
 import adminRouter from './routes/admin';
 import ticketsRouter from './routes/tickets';
+import { bootstrapAdmin } from './services/bootstrap';
 
 dotenv.config();
 
@@ -177,6 +178,7 @@ const gracefulShutdown = () => {
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
-server.listen(port, () => {
+server.listen(port, async () => {
   console.log(`[KMT API Backend] Production server listening on port ${port}`);
+  await bootstrapAdmin();
 });
