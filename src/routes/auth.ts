@@ -80,30 +80,49 @@ router.post('/employee-login', async (req: Request, res: Response) => {
  * Verifies a Firebase ID token, checks if user has "admin" role in Firestore.
  */
 router.post('/verify-admin', async (req: Request, res: Response) => {
+  console.log("[Verify Admin] Verify Request Received");
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Token is missing.' });
+  
+  if (!authHeader) {
+    console.error("[Verify Admin Failed] Missing Authorization header");
+    return res.status(401).json({ success: false, error: 'Token is missing.' });
   }
 
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    console.error("[Verify Admin Failed] Bearer token not found in header");
+    return res.status(401).json({ success: false, error: 'Bearer token is missing.' });
+  }
+
+  console.log(`[Verify Admin] Bearer Token Extracted. Length: ${token.length}`);
+
   try {
+    console.log("[Verify Admin] Token Decoded...");
     const decodedToken = await auth.verifyIdToken(token);
-    const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+    const uid = decodedToken.uid;
+    console.log(`[Verify Admin] UID Verified: ${uid}`);
+    console.log(`[Verify Admin] Decoded Details - Email: ${decodedToken.email}, Aud: ${decodedToken.aud}, Iss: ${decodedToken.iss}`);
+
+    console.log("[Verify Admin] Firestore Loaded...");
+    const userDoc = await db.collection('users').doc(uid).get();
 
     if (!userDoc.exists) {
-      return res.status(403).json({ error: 'Unauthorized Access. User profile not found.' });
+      console.error(`[Verify Admin Failed] Firestore profile missing for UID: ${uid}`);
+      return res.status(404).json({ success: false, error: 'Unauthorized Access. User profile not found.' });
     }
 
     const userData = userDoc.data();
     if (userData?.role !== 'admin') {
-      return res.status(403).json({ error: 'Unauthorized Access. Administrative privileges required.' });
+      console.error(`[Verify Admin Failed] Role mismatch. Expected "admin", found "${userData?.role}" for UID: ${uid}`);
+      return res.status(403).json({ success: false, error: 'Unauthorized Access. Administrative privileges required.' });
     }
 
     if (!userData.isActive) {
-      return res.status(403).json({ error: 'Unauthorized Access. This account is deactivated.' });
+      console.error(`[Verify Admin Failed] Inactive administrator: ${userData?.email}`);
+      return res.status(403).json({ success: false, error: 'Unauthorized Access. This account is deactivated.' });
     }
 
+    console.log(`[Verify Admin] Session Approved for admin: ${userData.email}`);
     return res.status(200).json({
       success: true,
       user: {
@@ -116,8 +135,8 @@ router.post('/verify-admin', async (req: Request, res: Response) => {
       }
     });
   } catch (err: any) {
-    console.error('[Verify Admin Endpoint Error]:', err);
-    return res.status(401).json({ error: 'Invalid token or session expired.' });
+    console.error('[Verify Admin Failed] Token verification failed:', err.stack || err.message || err);
+    return res.status(401).json({ success: false, error: 'Invalid token or session expired.' });
   }
 });
 
@@ -126,38 +145,47 @@ router.post('/verify-admin', async (req: Request, res: Response) => {
  * Authenticates the admin and updates their password, disabling further bootstrapping.
  */
 router.post('/change-admin-password', async (req: Request, res: Response) => {
+  console.log("[Change Password] Change Password Request Received");
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!authHeader) {
+    console.error("[Change Password Failed] Missing Authorization header");
+    return res.status(400).json({ success: false, error: 'Token is missing.' });
+  }
+
+  const token = authHeader.split(' ')[1];
   const { newPassword } = req.body;
 
   if (!token || !newPassword) {
-    return res.status(400).json({ error: 'Token and new password are required.' });
+    console.error("[Change Password Failed] Token or new password missing");
+    return res.status(400).json({ success: false, error: 'Token and new password are required.' });
   }
 
   try {
     const decodedToken = await auth.verifyIdToken(token);
     const uid = decodedToken.uid;
+    console.log(`[Change Password] UID Verified: ${uid}`);
 
     const userDoc = await db.collection('users').doc(uid).get();
     if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
-      return res.status(403).json({ error: 'Access Denied.' });
+      console.error(`[Change Password Failed] Non-admin or missing profile for UID: ${uid}`);
+      return res.status(403).json({ success: false, error: 'Access Denied.' });
     }
 
-    // Update Firebase Auth password
+    console.log(`[Change Password] Updating Firebase Auth password for UID: ${uid}...`);
     await auth.updateUser(uid, { password: newPassword });
 
-    // Update Firestore admin document to set requirePasswordChange = false
+    console.log(`[Change Password] Updating Firestore document requirePasswordChange = false for UID: ${uid}...`);
     await db.collection('users').doc(uid).update({
       requirePasswordChange: false,
       updatedAt: Date.now()
     });
 
-    console.log(`[Bootstrap] Admin password successfully changed. Initialization disabled for uid: ${uid}`);
-
+    console.log(`[Change Password] Password changed successfully for UID: ${uid}`);
     return res.status(200).json({ success: true, message: 'Password updated successfully.' });
   } catch (err: any) {
-    console.error('[Change Admin Password Endpoint Error]:', err);
-    return res.status(500).json({ error: err.message || 'Internal server error changing password.' });
+    console.error('[Change Password Failed] Error changing password:', err.stack || err.message || err);
+    return res.status(500).json({ success: false, error: err.message || 'Internal server error changing password.' });
   }
 });
 
